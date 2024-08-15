@@ -19,11 +19,12 @@ struct SwipeView: View {
                             Button {
                                 vm.reloadData()
                             } label: {
-                                Text("重置")
+                                Text("重置图集")
                             }
                             .buttonStyle(.borderedProminent)
                         }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .frame(width: g.size.width, height: g.size.height)
+                        .background(.purple.opacity(0.5))
                     } else {
                         ForEach(vm.profiles.reversed()){ profile in
                             ProfileView(vm: vm, profile: profile, frame: g.frame(in: .global))
@@ -31,7 +32,6 @@ struct SwipeView: View {
                     }
                 }
             }
-            .padding([.horizontal, .bottom])
         }
         .background(
             Color.black
