@@ -16,41 +16,46 @@ struct ProfileView : View {
     var frame : CGRect
     
     var body: some View{
-        VStack {
-            Image(profile.image)
-                .resizable()
-                .scaledToFit()
-                .overlay {
-                    ColorOverlayView(offsetY: profile.offsetY)
-                }
-                .cornerRadius(10)
-                .padding(.horizontal, 10)
-                .overlay(alignment: .topTrailing) {
-                    if profile.offsetY > 0 {
-                        CircleOverlayView(title: "-1星", color: .red)
-                            .offset(x: 30, y: -30)
+        ZStack {
+            Color.black.ignoresSafeArea()
+                .opacity(min(1, max(0, 1 - abs(Double(profile.offsetY) / 800))))
+            
+            VStack {
+                Image(profile.image)
+                    .resizable()
+                    .scaledToFit()
+                    .overlay {
+                        ColorOverlayView(offsetY: profile.offsetY)
                     }
-                }
-                .overlay(alignment: .bottom) {
-                    if profile.offsetY < 0 {
-                        CircleOverlayView(title: "+1星", color: .green)
-                            .offset(y: 40)
+                    .cornerRadius(10)
+                    .padding(.horizontal, 10)
+                    .overlay(alignment: .topTrailing) {
+                        if profile.offsetY > 0 {
+                            CircleOverlayView(title: "-1星", color: .red)
+                                .offset(x: 30, y: -30)
+                        }
                     }
-                }
+                    .overlay(alignment: .bottom) {
+                        if profile.offsetY < 0 {
+                            CircleOverlayView(title: "+1星", color: .green)
+                                .offset(y: 40)
+                        }
+                    }
+            }
+            .frame(width: frame.width, height: frame.height)
+            .shadow(radius: 10)
+            .offset(x: profile.offsetX, y: profile.offsetY)
+            .rotationEffect(.init(degrees: calcDegrees(offsetY: profile.offsetY)))
+            .gesture(
+                DragGesture()
+                    .onChanged({ value in
+                        handleGestureChanged(value: value)
+                    })
+                    .onEnded({ value in
+                        handleGestureEnd(value: value)
+                    })
+            )
         }
-        .frame(width: frame.width, height: frame.height)
-        .offset(x: profile.offsetX, y: profile.offsetY)
-        //.rotationEffect(.init(degrees: profile.offset == 0 ? 0 : (profile.offset > 0 ? -12 : 12)))
-        .rotationEffect(.init(degrees: calcDegrees(offsetY: profile.offsetY)))
-        .gesture(
-            DragGesture()
-                .onChanged({ value in
-                    handleGestureChanged(value: value)
-                })
-                .onEnded({ value in
-                    handleGestureEnd(value: value)
-                })
-        )
     }
     
     func handleGestureChanged(value: DragGesture.Value) {
