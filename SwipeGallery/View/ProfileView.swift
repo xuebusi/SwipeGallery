@@ -11,6 +11,9 @@ struct ProfileView : View {
     let screenWidth = UIScreen.main.bounds.width
     let screenHeight = UIScreen.main.bounds.height
     
+    // 拖动阈值
+    private let threshold: CGFloat = 200
+    
     @ObservedObject var vm: ProfileViewModel
     @State var profile : Profile
     var frame : CGRect
@@ -27,7 +30,7 @@ struct ProfileView : View {
                     .overlay {
                         ColorOverlayView(offsetY: profile.offsetY)
                     }
-                    .cornerRadius(10)
+                    .cornerRadius(8)
                     .padding(.horizontal, 10)
                     .overlay(alignment: .topTrailing) {
                         if profile.offsetY > 0 {
@@ -61,7 +64,7 @@ struct ProfileView : View {
     func handleGestureChanged(value: DragGesture.Value) {
         withAnimation(.default){
             profile.offsetY = value.translation.height
-            if value.translation.height > 200 {
+            if value.translation.height > threshold {
                 profile.offsetX = -value.translation.height * 0.5
             } else {
                 profile.offsetX = 0
@@ -71,10 +74,12 @@ struct ProfileView : View {
     
     func handleGestureEnd(value: DragGesture.Value) {
         withAnimation(.easeIn(duration: 0.3)){
-            if profile.offsetY > 200 {
+            if profile.offsetY > threshold {
+                // 向下拖动超过阈值
                 profile.offsetY = screenHeight
                 profile.offsetX = -screenWidth
-            } else if profile.offsetY < -200 {
+            } else if profile.offsetY < -threshold {
+                // 向上拖动超过阈值
                 profile.offsetY = -screenHeight
             } else{
                 profile.offsetY = 0
@@ -83,7 +88,7 @@ struct ProfileView : View {
         }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            if profile.offsetY > 200 || profile.offsetY < -200 {
+            if profile.offsetY > threshold || profile.offsetY < -threshold {
                 if let index = vm.profiles.firstIndex(where: { $0.id == profile.id }) {
                     vm.profiles.remove(at: index)
                 }
@@ -92,11 +97,13 @@ struct ProfileView : View {
     }
     
     func calcDegrees(offsetY: CGFloat) -> Double {
-        if offsetY >= 200 {
+        // 向下拖动超过阈值
+        if offsetY >= threshold {
             return -15
         }
         
-        if offsetY < -200 {
+        // 向上拖动超过阈值
+        if offsetY <= -threshold {
             return 15
         }
         
