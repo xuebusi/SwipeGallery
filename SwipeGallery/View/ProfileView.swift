@@ -23,6 +23,30 @@ enum Direction: String {
             return 0
         }
     }
+    
+    // 星星对齐位置
+    var starAlign: Alignment {
+        switch(self) {
+        case .left:
+            return .topTrailing
+        case .right:
+            return .topLeading
+        case .none:
+            return .center
+        }
+    }
+    
+    // 星星X轴偏移
+    var starOffsetXValue: CGFloat {
+        switch(self) {
+        case .left:
+            return 30
+        case .right:
+            return -30
+        case .none:
+            return 0
+        }
+    }
 }
 
 
@@ -52,10 +76,10 @@ struct ProfileView : View {
                     }
                     .cornerRadius(8)
                     .padding(.horizontal, 10)
-                    .overlay(alignment: .topTrailing) {
+                    .overlay(alignment: self.direction.starAlign) {
                         if profile.offsetY > 0 {
                             CircleOverlayView(title: "-1星", color: .red)
-                                .offset(x: 30, y: -30)
+                                .offset(x: self.direction.starOffsetXValue, y: -30)
                         }
                     }
                     .overlay(alignment: .bottom) {
