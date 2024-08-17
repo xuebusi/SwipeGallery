@@ -7,6 +7,25 @@
 
 import SwiftUI
 
+// 拖动方向
+enum Direction: String {
+    case left = "向左"
+    case right = "向右"
+    case none = "无"
+    
+    var degrees: Double {
+        switch(self) {
+        case .left:
+            return -15
+        case .right:
+            return 15
+        case .none:
+            return 0
+        }
+    }
+}
+
+
 struct ProfileView : View {
     let screenWidth = UIScreen.main.bounds.width
     let screenHeight = UIScreen.main.bounds.height
@@ -16,6 +35,7 @@ struct ProfileView : View {
     
     @ObservedObject var vm: ProfileViewModel
     @State var profile : Profile
+    @State var direction: Direction = .none
     var frame : CGRect
     
     var body: some View{
@@ -59,13 +79,28 @@ struct ProfileView : View {
                     })
             )
         }
+        .overlay {
+            Text(self.direction.rawValue)
+                .foregroundColor(.white)
+                .padding()
+                .frame(width: 70)
+                .background(.black)
+        }
     }
     
     func handleGestureChanged(value: DragGesture.Value) {
         withAnimation(.default){
+            // 计算方向
+            self.direction = calcDirection(offsetX: value.translation.width)
+            
             profile.offsetY = value.translation.height
             if value.translation.height > threshold {
-                profile.offsetX = -value.translation.height * 0.5
+                if self.direction == .left {
+                    profile.offsetX = -value.translation.height * 0.5
+                }
+                if self.direction == .right {
+                    profile.offsetX = value.translation.height * 0.5
+                }
             } else {
                 profile.offsetX = 0
             }
@@ -77,7 +112,12 @@ struct ProfileView : View {
             if profile.offsetY > threshold {
                 // 向下拖动超过阈值
                 profile.offsetY = screenHeight
-                profile.offsetX = -screenWidth
+                if self.direction == .left {
+                    profile.offsetX = -screenWidth
+                }
+                if self.direction == .right {
+                    profile.offsetX = screenWidth
+                }
             } else if profile.offsetY < -threshold {
                 // 向上拖动超过阈值
                 profile.offsetY = -screenHeight
@@ -93,21 +133,31 @@ struct ProfileView : View {
                     vm.profiles.remove(at: index)
                 }
             }
+            // 当前图片移除后再重置方向
+            self.direction = .none
         }
     }
     
+    func calcDirection(offsetX: CGFloat) -> Direction {
+        return offsetX >= 0 ? .right : .left
+    }
+    
     func calcDegrees(offsetY: CGFloat) -> Double {
-        // 向下拖动超过阈值
-        if offsetY >= threshold {
-            return -15
-        }
+        /**
+         // 向下拖动超过阈值
+         if offsetY >= threshold {
+             return -15
+         }
+         
+         // 向上拖动超过阈值
+         if offsetY <= -threshold {
+             return 15
+         }
+         
+         return 0
+         */
         
-        // 向上拖动超过阈值
-        if offsetY <= -threshold {
-            return 15
-        }
-        
-        return 0
+        return offsetY >= threshold || offsetY <= -threshold ? self.direction.degrees : 0
     }
 }
 
